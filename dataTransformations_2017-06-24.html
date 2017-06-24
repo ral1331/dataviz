@@ -4,13 +4,26 @@
 <html>
 
   <head>
-  <title>Data Transformations with Economic Census</title>
+  <title>Data Transformations</title>
 
     <!-- Load D3 from site -->
     <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 
     <!-- CSS (Styling) -->
     <style type="text/css">
+      
+      div.tooltip { 
+          position: absolute;     
+          text-align: center;     
+          width: 150px;          
+          height: 40px;         
+          padding: 2px;       
+          font: 12px sans-serif;    
+          background: lightsteelblue; 
+          border: 0px;    
+          border-radius: 8px;     
+          pointer-events: none;     
+      }
 
       body {
           margin: 0;
@@ -20,18 +33,26 @@
 
 
       button {
-          margin: 0 7px 0 0;
-          background-color: #f5f5f5;
-          border: 1px solid #dedede;
-          border-top: 1px solid #eee;
-          border-left: 1px solid #eee;
+          margin: 0 5px  5px;
+          width: 150px;
+          height: 30px;
+          background-color: white;
+          border: 2px solid #455a64;
+          border-radius: 6px;
 
-          font-size: 12px;
+          font-size: 13px;
           line-height: 130%;
           text-decoration: none;
           font-weight: bold;
           color: #565656;
           cursor: pointer;
+          -webkit-transition-duration: 0.3s;
+          transition-duration: 0.3s;
+      }
+
+      button:hover {
+        background-color: #455a64;
+          color: white;
       }
 
       .axis path, .axis line {
@@ -74,31 +95,46 @@
 
   <body>
 
-  <h1>Wilkinson's Data Transformations and their Uses:</h1>
-  <h2>An Exploration through Real-World Examples</h2>
+  <h1>Data Transformations and their Uses:</h1>
 
-  <p>Ryan Lakritz</p><br><br><br>
+  <h3>Ryan Lakritz</h3><br><br><br>
 
 <div class="control-group">
     <button onclick="setup()">
         Set it up
     </button>
 
-    <button onclick="update(1)">
-        Make it Log
-    </button>
-
-    <button onclick="update(2)">
-        Do a Median
-    </button>
-
-    <button onclick="update(3)">
+    <button onclick="update(9)">
         Add a Regression
     </button>
 
-    <button onclick="update(4)">
-        Add the Residuals
+  </br><h3>Mathematical Transformations</h3>
+
+    <button onclick="update(1)">
+        Log
     </button>
+
+    <button onclick="update(4)">
+        Exponential
+    </button>
+
+  </br><h3>Statistical Transformations</h3>
+
+    <button onclick="update(2)">
+        Median
+    </button>
+
+    <button onclick="update(3)">
+        Mean
+    </button>
+
+    <button onclick="update(5)">
+        Mode
+    </button>
+
+    <button onclick="update(10)">
+        Residual
+    </button> 
 </div>
 
     <!-- Begin Javascript -->
@@ -106,7 +142,9 @@
       var width = 1000,
           height = 600,
           margin = { top: 40, right: 60, bottom: 40, left: 100 },
-          radius = 4;
+          radius = 4
+          x_title = "# Employees"
+          y_title = "Revenue ($)";
 
       var svg = d3.select("body").append("svg").attr({
         width: width,
@@ -144,7 +182,7 @@
       var xAxisGroup = svg.append("g")
             .call(xAxis)
             .attr("class", "axis")
-            .attr("transform", "translate(" + [0,height-margin.bottom] + ")")
+            .attr("transform", "translate(" + [0,height-margin.bottom] + ")");
 
 
       var yAxisGroup = svg.append("g")
@@ -168,9 +206,17 @@
           .duration(1000)
           .attr(circleAttrs);
 
-      
+      var div = d3.select("body").append("div")  
+          .attr("class", "tooltip")       
+          .style("opacity", 0);
+
+      /*var valueline = d3.svg.line()
+          .x(function(d) { return xScale(d.x); })
+          .y(function(d) { return yScale(d.y_hat); });*/
 
       function setup(){
+
+        d3.selectAll("line").remove();
 
           d3.csv("https://raw.githubusercontent.com/ral1331/dataviz/master/econCensus_summary.csv", function (data) {
               dataset = data.map(function (d) {
@@ -184,8 +230,26 @@
               xScale.domain([0, d3.max(dataset, function (d) { return autoScale(d.x); })])
               yScale.domain([0, d3.max(dataset, function (d) { return autoScale(d.y); })])
 
+              svg.selectAll("text").remove();
+
               xAxisGroup.transition().call(xAxis);
+              xAxisGroup.append("text")
+                .attr("class", "label")
+                .attr("x", width-margin.right)
+                .attr("y", -6)
+                .style("text-anchor", "end")
+                .style("font-weight", "bold")
+                .text(x_title);
+
               yAxisGroup.transition().call(yAxis);
+              yAxisGroup.append("text")
+                .attr("class", "label")
+                .attr("y", 10)
+                .attr("x",-margin.top)
+                .attr("transform", "rotate(-90)")
+                .style("text-anchor", "end")
+                .style("font-weight", "bold")
+                .text(y_title);
 
               var c = svg.selectAll("circle")  // For new circle, go through the update process
                 .data(dataset);
@@ -216,8 +280,17 @@
           else if (trans==2){
             medianTrans();
           }
+          else if (trans==3){
+            meanTrans();
+          }
+          else if(trans==4){
+            expTrans();
+          }
+          else if(trans==5){
+            modeTrans();
+          }
 
-          else if(trans==3){
+          else if(trans==9){
               var reg = regTrans(dataset, "x", "y", d3.min(dataset, function(d){ return d.x}), d3.min(dataset, function(d){ return d.x}));
 
               console.log(reg);
@@ -231,7 +304,7 @@
                   .attr("y2", yScale(d3.max(reg, function(d){return d.y_hat})));
           }
 
-          else if(trans==4){
+          else if(trans==10){
               var reg = regTrans(dataset, "x", "y", d3.min(dataset, function(d){ return d.x}), d3.min(dataset, function(d){ return d.x}));
 
               console.log(reg);
@@ -251,9 +324,29 @@
           xScale.domain([0, d3.max(dataset, function (d) { return autoScale(d.x); })])
           yScale.domain([0, d3.max(dataset, function (d) { return autoScale(d.y); })])
 
-          xAxisGroup.transition().duration(500).call(xAxis);
-          yAxisGroup.transition().duration(500).call(yAxis);
+          svg.selectAll("text").remove();
 
+          xAxisGroup.transition().duration(500).call(xAxis);
+          xAxisGroup.append("text")
+            .attr("class", "label")
+            .attr("x", width-margin.right)
+            .attr("y", -6)
+            .style("text-anchor", "end")
+            .style("font-weight", "bold")
+            .text(x_title);
+
+          yAxisGroup.transition().duration(500).call(yAxis);
+          yAxisGroup.append("text")
+            .attr("class", "label")
+            .attr("y", 10)
+            .attr("x",-margin.top)
+            .attr("transform", "rotate(-90)")
+            .style("text-anchor", "end")
+            .style("font-weight", "bold")
+            .text(y_title);
+
+          x_title = "# Employees";
+          y_title = "Revenue ($)";
 
           var c = svg.selectAll("circle")  // For new circle, go through the update process
             .data(dataset);
@@ -274,9 +367,8 @@
               .attr(circleAttrs);
 
           c.exit().remove();
-
-
       }
+
 
       function logTrans() {
 
@@ -288,6 +380,24 @@
                             y: logy,
                             id: dataset[i].id};
           }
+
+          x_title = "log(# Employees)";
+          y_title = "log(Revenue)";
+      }
+
+      function expTrans() {
+
+          for (var i = 0; i < dataset.length; i++) {
+              var expx = Math.pow(Math.E,dataset[i].x);
+              var expy = Math.pow(Math.E,dataset[i].y);
+              
+              dataset[i] = {x: expx,
+                            y: expy,
+                            id: dataset[i].id};
+          }
+
+          x_title = "e^(# Employees)";
+          y_title = "e^(Revenue)";
       }
 
       function medianTrans() {
@@ -308,6 +418,45 @@
             }
           });  
       }
+
+      function meanTrans() {
+
+          var meanSummary = d3.nest()
+            .key(function(d) { return d.id; })
+            .rollup(function(v) { return {
+              x: d3.mean(v, function(d) { return d.x; }),
+              y: d3.mean(v, function(d) { return d.y; })
+            }; })
+            .entries(dataset);
+
+          dataset = meanSummary.map(function(d) {
+            return {
+              id: d.key,
+              x: d.values.x,
+              y: d.values.y
+            }
+          });  
+      }      
+
+      function modeTrans() {
+
+          var modeSummary = d3.nest()
+            .key(function(d) { return d.id; })
+            .rollup(function(v) { return {
+              x: d3.mode(v, function(d) { return d.x; }),
+              y: d3.mode(v, function(d) { return d.y; })
+            }; })
+            .entries(dataset);
+
+          dataset = modeSummary.map(function(d) {
+            return {
+              id: d.key,
+              x: d.values.x,
+              y: d.values.y
+            }
+          });  
+      }
+
 
     function regTrans(data, x, y, minX, minY){
       /////////
@@ -390,42 +539,27 @@
     }
 
 // Create Event Handlers for mouse
-      function handleMouseOver(d, i) {  // Add interactivity
+      function handleMouseOver(d) {    
+                    div.transition()    
+                        .duration(50)    
+                        .style("opacity", .9);    
+                    div .html("Industry: " + d.id + "<br/>Employees:: "  + Math.round(d.x) + "<br/>Revenue: " + Math.round(d.y))  
+                        .style("left", (d3.event.pageX) + "px")   
+                        .style("top", (d3.event.pageY - 28) + "px");  
+      }
 
-            // Use D3 to select element, change color and size
-            d3.select(this).attr({
-              fill: "orange",
-              r: radius * 2
-            });
-
-            // Specify where to put label of text
-            svg.append("text").attr({
-               id: "t" + d.x + "-" + d.y + "-" + i,  // Create an id for text so we can select it later for removing on mouseout
-                x: function() { return xScale(d.x) - 30; },
-                y: function() { return yScale(d.y) - 15; }
-            })
-            .text(function() {
-              return [d.x, d.y];  // Value of the text
-            });
-          }
-
-      function handleMouseOut(d, i) {
-            // Use D3 to select element, change color back to normal
-            d3.select(this).attr({
-              fill: "none",
-              r: radius
-            });
-
-            // Select text by id and then remove
-            d3.select("#t" + d.x + "-" + d.y + "-" + i).remove();  // Remove text location
-          }
+      function handleMouseOut(d) {   
+                    div.transition()    
+                    .duration(2000)    
+                    .style("opacity", 0)
+      }
     
-    function autoScale(n) {
-        var order = Math.floor(Math.log(n) / Math.LN10 + 0.000000001);
-        var sci = Math.pow(10,order);
-        var firstDigitCeiling = Math.ceil(n/sci);
-        return firstDigitCeiling*sci;
-    }
+      function autoScale(n) {
+          var order = Math.floor(Math.log(n) / Math.LN10 + 0.000000001);
+          var sci = Math.pow(10,order);
+          var firstDigitCeiling = Math.ceil(n/sci);
+          return firstDigitCeiling*sci;
+      }
 
 
     </script>
