@@ -118,6 +118,10 @@
         Exponential
     </button>
 
+    <button onclick="update(6)">
+        Inverse
+    </button>
+
   </br><h3>Statistical Transformations</h3>
 
     <button onclick="update(2)">
@@ -287,6 +291,9 @@
           else if(trans==5){
             modeTrans();
           }
+          else if(trans==6){
+            invTrans();
+          }
 
           else if(trans==9){
               var reg = regTrans(dataset, "x", "y", d3.min(dataset, function(d){ return d.x}), d3.min(dataset, function(d){ return d.x}));
@@ -389,6 +396,21 @@
               
               dataset[i] = {x: expx,
                             y: expy,
+                            id: dataset[i].id};
+          }
+
+          /*x_title = "e^(# Employees)";
+          y_title = "e^(Revenue)";*/
+      }
+
+      function invTrans() {
+
+          for (var i = 0; i < dataset.length; i++) {
+              var invx = Math.pow(dataset[i].x,-1);
+              var invy = Math.pow(dataset[i].y,-1);
+              
+              dataset[i] = {x: invx,
+                            y: invy,
                             id: dataset[i].id};
           }
 
