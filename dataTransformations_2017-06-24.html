@@ -68,7 +68,7 @@
       .line{
           fill: none;    
           stroke: grey;
-          stroke-width: 1;
+          stroke-width: 2;
       }
 
       .regression {
@@ -178,13 +178,26 @@
             .call(xAxis)
             .attr("class", "axis")
             .attr("transform", "translate(" + [0,height-margin.bottom] + ")");
-
+      xAxisGroup.append("text")
+                .attr("class", "label")
+                .attr("x", width-margin.right)
+                .attr("y", -6)
+                .style("text-anchor", "end")
+                .style("font-weight", "bold")
+                .text(x_title);
 
       var yAxisGroup = svg.append("g")
             .call(yAxis)
             .attr("class", "axis")
-            .attr("transform", "translate(" + [margin.left,0] + ")")
-
+            .attr("transform", "translate(" + [margin.left,0] + ")");
+      yAxisGroup.append("text")
+                .attr("class", "label")
+                .attr("y", 10)
+                .attr("x",-margin.top)
+                .attr("transform", "rotate(-90)")
+                .style("text-anchor", "end")
+                .style("font-weight", "bold")
+                .text(y_title);
 
       var circles = svg.selectAll("circle")
           .data(dataset)
@@ -213,35 +226,35 @@
                   };
               });
 
-              xScale.domain([0, d3.max(dataset, function (d) { return autoScale(d.x); })])
-              yScale.domain([0, d3.max(dataset, function (d) { return autoScale(d.y); })])
+              xScale.domain([0, d3.max(dataset, function (d) { return autoScale(d.x); })]);
+              yScale.domain([0, d3.max(dataset, function (d) { return autoScale(d.y); })]);
 
-              svg.selectAll("text").remove();
+              //svg.selectAll("text").remove();
 
               xAxisGroup.transition().call(xAxis);
-              xAxisGroup.append("text")
+              /*xAxisGroup.append("text")
                 .attr("class", "label")
                 .attr("x", width-margin.right)
                 .attr("y", -6)
                 .style("text-anchor", "end")
                 .style("font-weight", "bold")
-                .text(x_title);
+                .text(x_title);*/
 
               yAxisGroup.transition().call(yAxis);
-              yAxisGroup.append("text")
+              /*yAxisGroup.append("text")
                 .attr("class", "label")
                 .attr("y", 10)
                 .attr("x",-margin.top)
                 .attr("transform", "rotate(-90)")
                 .style("text-anchor", "end")
                 .style("font-weight", "bold")
-                .text(y_title);
+                .text(y_title);*/
 
               var c = svg.selectAll("circle")
                 .data(dataset);
 
               c.transition()
-                .attr(circleAttrs)
+                .attr(circleAttrs);
 
               c.enter()
                 .append("circle")
@@ -306,29 +319,29 @@
               }
           }
 
-          xScale.domain([0, d3.max(dataset, function (d) { return autoScale(d.x); })])
-          yScale.domain([0, d3.max(dataset, function (d) { return autoScale(d.y); })])
+          xScale.domain([0, d3.max(dataset, function (d) { return autoScale(d.x); })]);
+          yScale.domain([0, d3.max(dataset, function (d) { return autoScale(d.y); })]);
 
-          svg.selectAll("text").remove();
+          //svg.selectAll("text").remove();
 
           xAxisGroup.transition().duration(500).call(xAxis);
-          xAxisGroup.append("text")
+          /*xAxisGroup.append("text")
             .attr("class", "label")
             .attr("x", width-margin.right)
             .attr("y", -6)
             .style("text-anchor", "end")
             .style("font-weight", "bold")
-            .text(x_title);
+            .text(x_title);*/
 
           yAxisGroup.transition().duration(500).call(yAxis);
-          yAxisGroup.append("text")
+          /*yAxisGroup.append("text")
             .attr("class", "label")
             .attr("y", 10)
             .attr("x",-margin.top)
             .attr("transform", "rotate(-90)")
             .style("text-anchor", "end")
             .style("font-weight", "bold")
-            .text(y_title);
+            .text(y_title);*/
 
           x_title = "# Employees";
           y_title = "Revenue ($)";
@@ -337,7 +350,7 @@
             .data(dataset);
 
           c.transition()
-            .attr(circleAttrs)
+            .attr(circleAttrs);
 
           c.enter()
             .append("circle")
@@ -364,8 +377,8 @@
                             id: dataset[i].id};
           }
 
-          x_title = "log(# Employees)";
-          y_title = "log(Revenue)";
+          // x_title = "log(# Employees)";
+          // y_title = "log(Revenue)";
       }
 
       function expTrans() {
@@ -379,8 +392,8 @@
                             id: dataset[i].id};
           }
 
-          x_title = "e^(# Employees)";
-          y_title = "e^(Revenue)";
+          /*x_title = "e^(# Employees)";
+          y_title = "e^(Revenue)";*/
       }
 
       function medianTrans() {
