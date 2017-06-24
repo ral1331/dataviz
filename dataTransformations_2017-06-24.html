@@ -101,7 +101,7 @@
 
 <div class="control-group">
     <button onclick="setup()">
-        Set it up
+        Setup/Restart
     </button>
 
     <button onclick="update(9)">
@@ -142,29 +142,24 @@
       var width = 1000,
           height = 600,
           margin = { top: 40, right: 60, bottom: 40, left: 100 },
-          radius = 4
-          x_title = "# Employees"
-          y_title = "Revenue ($)";
+          radius = 4,
+          x_title = "# Employees",
+          y_title = "Revenue ($)",
+          dataset = [];
 
       var svg = d3.select("body").append("svg").attr({
         width: width,
         height: height
       });
 
-      var dataset = [];
-
-
-      // We're passing in a function in d3.max to tell it what we're maxing (x value)
       var xScale = d3.scale.linear()
           .domain([0, d3.max(dataset, function (d) { return autoScale(d.x); })])
           .range([margin.left, width - margin.right]);  // Set margins for x specific
 
-      // We're passing in a function in d3.max to tell it what we're maxing (y value)
       var yScale = d3.scale.linear()
           .domain([0, d3.max(dataset, function (d) { return autoScale(d.x); })])
           .range([height - margin.bottom, margin.top]);  // Set margins for y specific
 
-      // Add a X and Y Axis (Note: orient means the direction that ticks go, not position)
       var xAxis = d3.svg.axis().scale(xScale).orient("bottom");
       var yAxis = d3.svg.axis().scale(yScale).orient("left");
 
@@ -199,20 +194,11 @@
           .on("mouseover", handleMouseOver)
           .on("mouseout", handleMouseOut);
 
-      circles.transition()  // Gives the fly out from the center effect
-          .delay(function (d, i){
-              return i * 100;  // Gives a slight delay with 100 ms spacing
-          })
-          .duration(1000)
-          .attr(circleAttrs);
-
       var div = d3.select("body").append("div")  
           .attr("class", "tooltip")       
           .style("opacity", 0);
 
-      /*var valueline = d3.svg.line()
-          .x(function(d) { return xScale(d.x); })
-          .y(function(d) { return yScale(d.y_hat); });*/
+
 
       function setup(){
 
@@ -251,10 +237,9 @@
                 .style("font-weight", "bold")
                 .text(y_title);
 
-              var c = svg.selectAll("circle")  // For new circle, go through the update process
+              var c = svg.selectAll("circle")
                 .data(dataset);
 
-              // Updates existing circles to new positions by just adding attr
               c.transition()
                 .attr(circleAttrs)
 
@@ -348,10 +333,8 @@
           x_title = "# Employees";
           y_title = "Revenue ($)";
 
-          var c = svg.selectAll("circle")  // For new circle, go through the update process
+          var c = svg.selectAll("circle")  
             .data(dataset);
-
-          // Updates existing circles to new positions by just adding attr
 
           c.transition()
             .attr(circleAttrs)
@@ -363,7 +346,7 @@
             .on("mouseout", handleMouseOut);
 
           c.transition()
-              .duration(1000)  // Set how long it takes
+              .duration(1000) 
               .attr(circleAttrs);
 
           c.exit().remove();
@@ -540,18 +523,28 @@
 
 // Create Event Handlers for mouse
       function handleMouseOver(d) {    
-                    div.transition()    
-                        .duration(50)    
-                        .style("opacity", .9);    
-                    div .html("Industry: " + d.id + "<br/>Employees:: "  + Math.round(d.x) + "<br/>Revenue: " + Math.round(d.y))  
-                        .style("left", (d3.event.pageX) + "px")   
-                        .style("top", (d3.event.pageY - 28) + "px");  
+          d3.select(this).attr({
+              fill: "orange",
+              r: radius * 2
+            });
+
+          div.transition()    
+              .duration(50)    
+              .style("opacity", .9);    
+          div .html("Industry: " + d.id + "<br/>Employees:: "  + Math.round(d.x) + "<br/>Revenue: " + Math.round(d.y))  
+              .style("left", (d3.event.pageX) + "px")   
+              .style("top", (d3.event.pageY - 28) + "px");  
       }
 
       function handleMouseOut(d) {   
-                    div.transition()    
-                    .duration(2000)    
-                    .style("opacity", 0)
+        d3.select(this).attr({
+              fill: "none",
+              r: radius
+            });
+
+        div.transition()    
+        .duration(2000)    
+        .style("opacity", 0)
       }
     
       function autoScale(n) {
