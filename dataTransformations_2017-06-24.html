@@ -141,6 +141,15 @@
     </button> 
 </div>
 
+
+<div id="Chart">
+
+</div>
+<br>
+<div id="Description">
+
+</div>
+
     <!-- Begin Javascript -->
     <script type="text/javascript">
       var width = 1000,
@@ -151,7 +160,7 @@
           y_title = "Revenue ($)",
           dataset = [];
 
-      var svg = d3.select("body").append("svg").attr({
+      var svg = d3.select("#Chart").append("svg").attr({
         width: width,
         height: height
       });
@@ -211,11 +220,13 @@
           .on("mouseover", handleMouseOver)
           .on("mouseout", handleMouseOut);
 
-      var div = d3.select("body").append("div")  
+      var div = d3.select("#Chart").append("div")  
           .attr("class", "tooltip")       
           .style("opacity", 0);
 
-
+      var div2 = d3.select("#Description").append("div")
+          .attr("class", "body")
+          .style("opacity", 0);
 
       function setup(){
 
@@ -370,6 +381,14 @@
               .attr(circleAttrs);
 
           c.exit().remove();
+
+
+          /*div2.transition()
+              .duration(50)
+              .style("opacity", .9);    
+          div2.html("transText")
+              .style("left", "10px")
+              .style("top", "1000px");*/
       }
 
 
@@ -566,9 +585,12 @@
           div.transition()    
               .duration(50)    
               .style("opacity", .9);    
-          div .html("Industry: " + d.id + "<br/>Employees:: "  + Math.round(d.x) + "<br/>Revenue: " + Math.round(d.y))  
+          div.html("Industry: " + d.id + "<br/>Employees:: "  + Math.round(d.x) + "<br/>Revenue: " + Math.round(d.y))  
               .style("left", (d3.event.pageX) + "px")   
-              .style("top", (d3.event.pageY - 28) + "px");  
+              .style("top", (d3.event.pageY - 28) + "px");
+
+
+
       }
 
       function handleMouseOut(d) {   
@@ -591,5 +613,9 @@
 
 
     </script>
-  </body>
+
+</body>
+
+
+
 </html>
