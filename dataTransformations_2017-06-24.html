@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<!-- Allows creating new values outside the normal scale
+     Then updates axis, scales, and circle attributes -->
+<html>
+
+  <head>
+  <title>Data Transformations with Economic Census</title>
+
+    <!-- Load D3 from site -->
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+
+    <!-- CSS (Styling) -->
+    <style type="text/css">
+
+      body {
+          margin: 0;
+          font-family: sans-serif;
+          font-size: 11px;
+      }
+
+
+      button {
+          margin: 0 7px 0 0;
+          background-color: #f5f5f5;
+          border: 1px solid #dedede;
+          border-top: 1px solid #eee;
+          border-left: 1px solid #eee;
+
+          font-size: 12px;
+          line-height: 130%;
+          text-decoration: none;
+          font-weight: bold;
+          color: #565656;
+          cursor: pointer;
+      }
+
+      .axis path, .axis line {
+          fill: none;
+          stroke: #000;
+          shape-rendering: crispEdges;
+      }
+
+      .axis text {
+          font: 10px sans-serif;
+      }
+
+      .line{
+          fill: none;    
+          stroke: grey;
+          stroke-width: 1;
+      }
+
+      .regression {
+          stroke-width: 1.5;
+          stroke: red;
+          stroke-dasharray: 10,5;
+      }
+
+
+      .resid {
+          stroke-width: 1;
+          stroke: grey;
+          shape-rendering: crispEdges;
+      }
+      /*
+      //Can use CSS3 Transitions, but not for everything (e.g. change radius size)
+      circle:hover{
+        fill: green;
+      }
+      */
+
+    </style>
+  </head>
+
+  <body>
+
+  <h1>Wilkinson's Data Transformations and their Uses:</h1>
+  <h2>An Exploration through Real-World Examples</h2>
+
+  <p>Ryan Lakritz</p><br><br><br>
+
+<div class="control-group">
+    <button onclick="setup()">
+        Set it up
+    </button>
+
+    <button onclick="update(1)">
+        Make it Log
+    </button>
+
+    <button onclick="update(2)">
+        Do a Median
+    </button>
+
+    <button onclick="update(3)">
+        Add a Regression
+    </button>
+
+    <button onclick="update(4)">
+        Add the Residuals
+    </button>
+</div>
+
+    <!-- Begin Javascript -->
+    <script type="text/javascript">
+      var width = 1000,
+          height = 600,
+          margin = { top: 40, right: 60, bottom: 40, left: 100 },
+          radius = 4;
+
+      var svg = d3.select("body").append("svg").attr({
+        width: width,
+        height: height
+      });
+
+      var dataset = [];
+
+
+      // We're passing in a function in d3.max to tell it what we're maxing (x value)
+      var xScale = d3.scale.linear()
+          .domain([0, d3.max(dataset, function (d) { return autoScale(d.x); })])
+          .range([margin.left, width - margin.right]);  // Set margins for x specific
+
+      // We're passing in a function in d3.max to tell it what we're maxing (y value)
+      var yScale = d3.scale.linear()
+          .domain([0, d3.max(dataset, function (d) { return autoScale(d.x); })])
+          .range([height - margin.bottom, margin.top]);  // Set margins for y specific
+
+      // Add a X and Y Axis (Note: orient means the direction that ticks go, not position)
+      var xAxis = d3.svg.axis().scale(xScale).orient("bottom");
+      var yAxis = d3.svg.axis().scale(yScale).orient("left");
+
+      // Sets circles attributes
+      var circleAttrs = {
+          cx: function(d) { return xScale(d.x); },
+          cy: function(d) { return yScale(d.y); },
+          r: radius,
+          stroke: "#01579b",
+          "stroke-width": 1.5,
+          fill: "none"
+      };
+
+      // Adds Axes as 'g' elements
+      var xAxisGroup = svg.append("g")
+            .call(xAxis)
+            .attr("class", "axis")
+            .attr("transform", "translate(" + [0,height-margin.bottom] + ")")
+
+
+      var yAxisGroup = svg.append("g")
+            .call(yAxis)
+            .attr("class", "axis")
+            .attr("transform", "translate(" + [margin.left,0] + ")")
+
+
+      var circles = svg.selectAll("circle")
+          .data(dataset)
+          .enter()
+          .append("circle")
+          .attr(circleAttrs)  // Get attributes from circleInitialAttrs var
+          .on("mouseover", handleMouseOver)
+          .on("mouseout", handleMouseOut);
+
+      circles.transition()  // Gives the fly out from the center effect
+          .delay(function (d, i){
+              return i * 100;  // Gives a slight delay with 100 ms spacing
+          })
+          .duration(1000)
+          .attr(circleAttrs);
+
+      
+
+      function setup(){
+
+          d3.csv("econCensus_summary.csv", function (data) {
+              dataset = data.map(function (d) {
+                  return {
+                      x: d.EMP,
+                      y: d.RCPTOT,
+                      id: d.NAICS_id2
+                  };
+              });
+
+              xScale.domain([0, d3.max(dataset, function (d) { return autoScale(d.x); })])
+              yScale.domain([0, d3.max(dataset, function (d) { return autoScale(d.y); })])
+
+              xAxisGroup.transition().call(xAxis);
+              yAxisGroup.transition().call(yAxis);
+
+              var c = svg.selectAll("circle")  // For new circle, go through the update process
+                .data(dataset);
+
+              // Updates existing circles to new positions by just adding attr
+              c.transition()
+                .attr(circleAttrs)
+
+              c.enter()
+                .append("circle")
+                .attr(circleAttrs)
+                .on("mouseover", handleMouseOver)
+                .on("mouseout", handleMouseOut);
+
+              c.transition()
+                  .duration(1000)  // Set how long it takes
+                  .attr(circleAttrs);   
+          });
+          
+          
+      }
+
+      function update(trans){
+
+          if (trans==1){
+            logTrans();
+          }
+          else if (trans==2){
+            medianTrans();
+          }
+
+          else if(trans==3){
+              var reg = regTrans(dataset, "x", "y", d3.min(dataset, function(d){ return d.x}), d3.min(dataset, function(d){ return d.x}));
+
+              console.log(reg);
+
+              svg.append("line")
+                  .attr("class", "regression")
+                  .transition(1000)
+                  .attr("x1", xScale(d3.min(reg, function(d){return d.x})))
+                  .attr("y1", yScale(d3.min(reg, function(d){return d.y_hat})))
+                  .attr("x2", xScale(d3.max(reg, function(d){return d.x})))
+                  .attr("y2", yScale(d3.max(reg, function(d){return d.y_hat})));
+          }
+
+          else if(trans==4){
+              var reg = regTrans(dataset, "x", "y", d3.min(dataset, function(d){ return d.x}), d3.min(dataset, function(d){ return d.x}));
+
+              console.log(reg);
+
+              for(var i = 0; i < reg.length; i++){
+                svg.append("line")
+                  .attr("class", "resid")
+                  .transition(1000)
+                  .attr("x1", xScale(reg[i].x))
+                  .attr("y1", yScale(reg[i].y_hat))
+                  .attr("x2", xScale(reg[i].x))
+                  .attr("y2", yScale(reg[i].y_hat+reg[i].resid));
+              console.log([reg[i].x, reg[i].y_hat, reg[i].resid]);
+              }
+          }
+
+          xScale.domain([0, d3.max(dataset, function (d) { return autoScale(d.x); })])
+          yScale.domain([0, d3.max(dataset, function (d) { return autoScale(d.y); })])
+
+          xAxisGroup.transition().duration(500).call(xAxis);
+          yAxisGroup.transition().duration(500).call(yAxis);
+
+
+          var c = svg.selectAll("circle")  // For new circle, go through the update process
+            .data(dataset);
+
+          // Updates existing circles to new positions by just adding attr
+
+          c.transition()
+            .attr(circleAttrs)
+
+          c.enter()
+            .append("circle")
+            .attr(circleAttrs)
+            .on("mouseover", handleMouseOver)
+            .on("mouseout", handleMouseOut);
+
+          c.transition()
+              .duration(1000)  // Set how long it takes
+              .attr(circleAttrs);
+
+          c.exit().remove();
+
+
+      }
+
+      function logTrans() {
+
+          for (var i = 0; i < dataset.length; i++) {
+              var logx = Math.log(dataset[i].x);
+              var logy = Math.log(dataset[i].y);
+              
+              dataset[i] = {x: logx,
+                            y: logy,
+                            id: dataset[i].id};
+          }
+      }
+
+      function medianTrans() {
+
+          var medianSummary = d3.nest()
+            .key(function(d) { return d.id; })
+            .rollup(function(v) { return {
+              x: d3.median(v, function(d) { return d.x; }),
+              y: d3.median(v, function(d) { return d.y; })
+            }; })
+            .entries(dataset);
+
+          dataset = medianSummary.map(function(d) {
+            return {
+              id: d.key,
+              x: d.values.x,
+              y: d.values.y
+            }
+          });  
+      }
+
+    function regTrans(data, x, y, minX, minY){
+      /////////
+      //SLOPE//
+      /////////
+
+      // Let n = the number of data points
+      var n = data.length;
+
+      // Get just the points
+      var pts = [];
+      data.forEach(function(d,i){
+        var obj = {};
+        obj.x = d[x];
+        obj.y = d[y];
+        obj.mult = obj.x*obj.y;
+        pts.push(obj);
+      });
+
+      // Let a equal n times the summation of all x-values multiplied by their corresponding y-values
+      // Let b equal the sum of all x-values times the sum of all y-values
+      // Let c equal n times the sum of all squared x-values
+      // Let d equal the squared sum of all x-values
+      var sum = 0;
+      var xSum = 0;
+      var ySum = 0;
+      var sumSq = 0;
+      pts.forEach(function(pt){
+        sum = sum + pt.mult;
+        xSum = xSum + pt.x;
+        ySum = ySum + pt.y;
+        sumSq = sumSq + (pt.x * pt.x);
+      });
+      var a = sum * n;
+      var b = xSum * ySum;
+      var c = sumSq * n;
+      var d = xSum * xSum;
+
+      // Plug the values that you calculated for a, b, c, and d into the following equation to calculate the slope
+      // slope = m = (a - b) / (c - d)
+      var m = (a - b) / (c - d);
+
+      /////////////
+      //INTERCEPT//
+      /////////////
+
+      // Let e equal the sum of all y-values
+      var e = ySum;
+
+      // Let f equal the slope times the sum of all x-values
+      var f = m * xSum;
+
+      // Plug the values you have calculated for e and f into the following equation for the y-intercept
+      // y-intercept = b = (e - f) / n
+      var b = (e - f) / n;
+
+      // Calculate y hat vector
+
+      var y_hat = [];
+
+      for (var i = 0; i < n; i++){
+        y_hat.push(pts[i].x*m + b);
+      }
+
+      console.log(y_hat);
+
+      var pred = [];
+      for (var i = 0; i < n; i++){
+        pred.push({
+          x: pts[i].x,
+          y_hat: y_hat[i],
+          resid: pts[i].y - y_hat[i]
+        });
+      }
+
+      console.log(pred);
+
+      return pred
+
+    }
+
+// Create Event Handlers for mouse
+      function handleMouseOver(d, i) {  // Add interactivity
+
+            // Use D3 to select element, change color and size
+            d3.select(this).attr({
+              fill: "orange",
+              r: radius * 2
+            });
+
+            // Specify where to put label of text
+            svg.append("text").attr({
+               id: "t" + d.x + "-" + d.y + "-" + i,  // Create an id for text so we can select it later for removing on mouseout
+                x: function() { return xScale(d.x) - 30; },
+                y: function() { return yScale(d.y) - 15; }
+            })
+            .text(function() {
+              return [d.x, d.y];  // Value of the text
+            });
+          }
+
+      function handleMouseOut(d, i) {
+            // Use D3 to select element, change color back to normal
+            d3.select(this).attr({
+              fill: "none",
+              r: radius
+            });
+
+            // Select text by id and then remove
+            d3.select("#t" + d.x + "-" + d.y + "-" + i).remove();  // Remove text location
+          }
+    
+    function autoScale(n) {
+        var order = Math.floor(Math.log(n) / Math.LN10 + 0.000000001);
+        var sci = Math.pow(10,order);
+        var firstDigitCeiling = Math.ceil(n/sci);
+        return firstDigitCeiling*sci;
+    }
+
+
+    </script>
+  </body>
+</html>
