@@ -85,8 +85,7 @@
 
       .regression {
           stroke-width: 1.5;
-          stroke: red;
-          stroke-dasharray: 10,5;
+          stroke: #FF9B02;
       }
 
 
@@ -289,7 +288,13 @@
 
               c.transition()
                   .duration(1000)  // Set how long it takes
-                  .attr(circleAttrs);   
+                  .attr(circleAttrs);
+
+              div2.transition()
+                .duration(500)
+                .style("opacity", .9);    
+              div2.html("")
+              . style("left", margin.left+"px")
           });
           
           
@@ -317,11 +322,10 @@
           }
 
           else if(trans==9){
-              transDesc = "<strong>Residual Data Transformation</strong> is used in conjunction with a linear regression on a set of data to calculate how much distance there is between each of the data values and the predicted regression values. While correlation coefficients are widely used to understand a model’s goodness of fit, residuals provide an effective way to visualize it - the larger the residuals, the farther the actual data points are the model, and thus, the less accurate the model.";
+              transDesc = "";
 
               var reg = regTrans(dataset, "x", "y", d3.min(dataset, function(d){ return d.x}), d3.min(dataset, function(d){ return d.x}));
 
-              console.log(reg);
 
               svg.append("line")
                   .attr("class", "regression")
@@ -337,8 +341,6 @@
 
               var reg = regTrans(dataset, "x", "y", d3.min(dataset, function(d){ return d.x}), d3.min(dataset, function(d){ return d.x}));
 
-              console.log(reg);
-
               for(var i = 0; i < reg.length; i++){
                 svg.append("line")
                   .attr("class", "resid")
@@ -347,9 +349,14 @@
                   .attr("y1", yScale(reg[i].y_hat))
                   .attr("x2", xScale(reg[i].x))
                   .attr("y2", yScale(reg[i].y_hat+reg[i].resid));
-              console.log([reg[i].x, reg[i].y_hat, reg[i].resid]);
               }
+
           }
+
+         /* else if(trans==11){
+            var corr = pearsonCorrelation(dataset, "x", "y");
+            console.log(corr);
+          }*/
 
           xScale.domain([0, d3.max(dataset, function (d) { return d.x; })]);
           yScale.domain([0, d3.max(dataset, function (d) { return d.y; })]);
@@ -517,89 +524,88 @@
       }
 
 
-    function regTrans(data, x, y, minX, minY){
-      /////////
-      //SLOPE//
-      /////////
+      function regTrans(data, x, y, minX, minY){
+        /////////
+        //SLOPE//
+        /////////
 
-      // Let n = the number of data points
-      var n = data.length;
+        // Let n = the number of data points
+        var n = data.length;
 
-      // Get just the points
-      var pts = [];
-      data.forEach(function(d,i){
-        var obj = {};
-        obj.x = d[x];
-        obj.y = d[y];
-        obj.mult = obj.x*obj.y;
-        pts.push(obj);
-      });
-
-      // Let a equal n times the summation of all x-values multiplied by their corresponding y-values
-      // Let b equal the sum of all x-values times the sum of all y-values
-      // Let c equal n times the sum of all squared x-values
-      // Let d equal the squared sum of all x-values
-      var sum = 0;
-      var xSum = 0;
-      var ySum = 0;
-      var sumSq = 0;
-      pts.forEach(function(pt){
-        sum = sum + pt.mult;
-        xSum = xSum + pt.x;
-        ySum = ySum + pt.y;
-        sumSq = sumSq + (pt.x * pt.x);
-      });
-      var a = sum * n;
-      var b = xSum * ySum;
-      var c = sumSq * n;
-      var d = xSum * xSum;
-
-      // Plug the values that you calculated for a, b, c, and d into the following equation to calculate the slope
-      // slope = m = (a - b) / (c - d)
-      var m = (a - b) / (c - d);
-
-      /////////////
-      //INTERCEPT//
-      /////////////
-
-      // Let e equal the sum of all y-values
-      var e = ySum;
-
-      // Let f equal the slope times the sum of all x-values
-      var f = m * xSum;
-
-      // Plug the values you have calculated for e and f into the following equation for the y-intercept
-      // y-intercept = b = (e - f) / n
-      var b = (e - f) / n;
-
-      // Calculate y hat vector
-
-      var y_hat = [];
-
-      for (var i = 0; i < n; i++){
-        y_hat.push(pts[i].x*m + b);
-      }
-
-
-      var pred = [];
-      for (var i = 0; i < n; i++){
-        pred.push({
-          x: pts[i].x,
-          y_hat: y_hat[i],
-          resid: pts[i].y - y_hat[i]
+        // Get just the points
+        var pts = [];
+        data.forEach(function(d,i){
+          var obj = {};
+          obj.x = d[x];
+          obj.y = d[y];
+          obj.mult = obj.x*obj.y;
+          pts.push(obj);
         });
+
+        // Let a equal n times the summation of all x-values multiplied by their corresponding y-values
+        // Let b equal the sum of all x-values times the sum of all y-values
+        // Let c equal n times the sum of all squared x-values
+        // Let d equal the squared sum of all x-values
+        var sum = 0;
+        var xSum = 0;
+        var ySum = 0;
+        var sumSq = 0;
+        pts.forEach(function(pt){
+          sum = sum + pt.mult;
+          xSum = xSum + pt.x;
+          ySum = ySum + pt.y;
+          sumSq = sumSq + (pt.x * pt.x);
+        });
+        var a = sum * n;
+        var b = xSum * ySum;
+        var c = sumSq * n;
+        var d = xSum * xSum;
+
+        // Plug the values that you calculated for a, b, c, and d into the following equation to calculate the slope
+        // slope = m = (a - b) / (c - d)
+        var m = (a - b) / (c - d);
+
+        /////////////
+        //INTERCEPT//
+        /////////////
+
+        // Let e equal the sum of all y-values
+        var e = ySum;
+
+        // Let f equal the slope times the sum of all x-values
+        var f = m * xSum;
+
+        // Plug the values you have calculated for e and f into the following equation for the y-intercept
+        // y-intercept = b = (e - f) / n
+        var b = (e - f) / n;
+
+        // Calculate y hat vector
+
+        var y_hat = [];
+
+        for (var i = 0; i < n; i++){
+          y_hat.push(pts[i].x*m + b);
+        }
+
+
+        var pred = [];
+        for (var i = 0; i < n; i++){
+          pred.push({
+            x: pts[i].x,
+            y_hat: y_hat[i],
+            resid: pts[i].y - y_hat[i]
+          });
+        }
+
+        return pred
+
       }
 
-      console.log(pred);
-
-      return pred
-
-    }
 
 // Create Event Handlers for mouse
       function handleMouseOver(d) {    
           d3.select(this).attr({
-              fill: "orange",
+              fill: "#FF9B02",
               r: radius * 2
             });
 
