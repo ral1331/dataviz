@@ -25,6 +25,17 @@
           pointer-events: none;     
       }
 
+      div.Description {
+          position: absolute;
+          text-align: left;
+          vertical-align: top;
+          width: 800px;
+          height: 200px;
+          padding: 5px;
+          font: 14px sans-serif;
+          pointer-events: none;
+      }
+
       body {
           margin: 0;
           font-family: sans-serif;
@@ -97,7 +108,6 @@
 
   <h1>Data Transformations and their Uses:</h1>
 
-  <h3>Ryan Lakritz</h3><br><br><br>
 
 <div class="control-group">
     <button onclick="setup()">
@@ -140,25 +150,26 @@
         Residual
     </button> 
 </div>
-
-
-<div id="Chart">
-
-</div>
-<br>
+<br><br>
 <div id="Description">
 
 </div>
+<br><br><br><br>
+<div id="Chart">
+</div>
+<br>
+
 
     <!-- Begin Javascript -->
     <script type="text/javascript">
       var width = 1000,
           height = 600,
-          margin = { top: 40, right: 60, bottom: 40, left: 100 },
+          margin = { top: 40, right: 60, bottom: 40, left: 150 },
           radius = 4,
           x_title = "# Employees",
           y_title = "Revenue ($)",
-          dataset = [];
+          dataset = [],
+          transDesc;
 
       var svg = d3.select("#Chart").append("svg").attr({
         width: width,
@@ -225,7 +236,7 @@
           .style("opacity", 0);
 
       var div2 = d3.select("#Description").append("div")
-          .attr("class", "body")
+          .attr("class", "Description")
           .style("opacity", 0);
 
       function setup(){
@@ -307,6 +318,8 @@
           }
 
           else if(trans==9){
+              transDesc = "<strong>Residual Data Transformation</strong> is used in conjunction with a linear regression on a set of data to calculate how much distance there is between each of the data values and the predicted regression values. While correlation coefficients are widely used to understand a model’s goodness of fit, residuals provide an effective way to visualize it - the larger the residuals, the farther the actual data points are the model, and thus, the less accurate the model.";
+
               var reg = regTrans(dataset, "x", "y", d3.min(dataset, function(d){ return d.x}), d3.min(dataset, function(d){ return d.x}));
 
               console.log(reg);
@@ -321,6 +334,8 @@
           }
 
           else if(trans==10){
+              transDesc = "<strong>Residual Data Transformation</strong> is generally used in conjunction with a linear regression. It calculates how much distance there is between each of the data values and the predicted regression values. Residuals provide an effective way to visualize a model's goodness of fit - the larger the residuals, the less accurate the model.";
+
               var reg = regTrans(dataset, "x", "y", d3.min(dataset, function(d){ return d.x}), d3.min(dataset, function(d){ return d.x}));
 
               console.log(reg);
@@ -383,12 +398,11 @@
           c.exit().remove();
 
 
-          /*div2.transition()
-              .duration(50)
+          div2.transition()
+              .duration(500)
               .style("opacity", .9);    
-          div2.html("transText")
-              .style("left", "10px")
-              .style("top", "1000px");*/
+          div2.html(transDesc)
+              .style("left", margin.left+"px")
       }
 
 
@@ -405,6 +419,9 @@
 
           // x_title = "log(# Employees)";
           // y_title = "log(Revenue)";
+
+          transDesc = "<strong>Logarithm Transformation</strong> is a mathematical transformation primarily used for noralizing data. When dealing with positively (left) skewed data it can be applied to the dependent and/or independent variable(s).";
+
       }
 
       function expTrans() {
@@ -453,7 +470,9 @@
               x: d.values.x,
               y: d.values.y
             }
-          });  
+          });
+
+          transDesc = "<strong>Median Data Transformation</strong> The median is one of the most commonly used properties of a data set. It describes the value that is positioned exactly in the middle of the set. One key difference it has from the mean is that it is not effected by outliers.";
       }
 
       function meanTrans() {
@@ -472,7 +491,9 @@
               x: d.values.x,
               y: d.values.y
             }
-          });  
+          });
+
+          transDesc = "<strong>Mean Function</strong> calculates the average of a vector of values. This is a useful way to compress and summarize many data entries into one meaningful value.";
       }      
 
       function modeTrans() {
@@ -480,8 +501,8 @@
           var modeSummary = d3.nest()
             .key(function(d) { return d.id; })
             .rollup(function(v) { return {
-              x: d3.mode(v, function(d) { return d.x; }),
-              y: d3.mode(v, function(d) { return d.y; })
+              x: mode(dataset.map(function(d) {return d.x;})),
+              y: mode(dataset.map(function(d) {return d.y;}))
             }; })
             .entries(dataset);
 
@@ -491,7 +512,9 @@
               x: d.values.x,
               y: d.values.y
             }
-          });  
+          });
+
+          transDesc = "<strong>Mode Data Transformation</strong> describes the data value that appears the most times in a data set. The mode is often helpful for identifying which value applies to the largest portion of at a data set.";
       }
 
 
@@ -558,7 +581,6 @@
         y_hat.push(pts[i].x*m + b);
       }
 
-      console.log(y_hat);
 
       var pred = [];
       for (var i = 0; i < n; i++){
@@ -611,6 +633,21 @@
           return firstDigitCeiling*sci;
       }
 
+      function mode(arr) {
+          var numMapping = {};
+          var greatestFreq = 0;
+          var mode;
+          arr.forEach(function findMode(number) {
+              numMapping[number] = (numMapping[number] || 0) + 1;
+
+              if (greatestFreq < numMapping[number]) {
+                  greatestFreq = numMapping[number];
+                  mode = number;
+              }
+      });
+
+      return mode;
+      }
 
     </script>
 
