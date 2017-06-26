@@ -29,7 +29,7 @@
           position: absolute;
           text-align: left;
           vertical-align: top;
-          width: 800px;
+          width: 740px;
           height: 200px;
           padding: 5px;
           font: 14px sans-serif;
@@ -160,12 +160,12 @@
 
     <!-- Begin Javascript -->
     <script type="text/javascript">
-      var width = 800,
+      var width = 900,
           height = 500,
-          margin = { top: 40, right: 60, bottom: 40, left: 120 },
+          margin = { top: 40, right: 60, bottom: 40, left: 100 },
           radius = 4,
-          x_title = "# Employees",
-          y_title = "Revenue ($)",
+          x_title = "",
+          y_title = "",
           dataset = [],
           transDesc;
 
@@ -200,26 +200,30 @@
             .call(xAxis)
             .attr("class", "axis")
             .attr("transform", "translate(" + [0,height-margin.bottom] + ")");
+
       xAxisGroup.append("text")
-                .attr("class", "label")
-                .attr("x", width-margin.right)
-                .attr("y", -6)
-                .style("text-anchor", "end")
-                .style("font-weight", "bold")
-                .text(x_title);
+            .attr('id', 'xAxisLabel')
+            .attr("class", "label")
+            .attr("x", width-margin.right)
+            .attr("y", -6)
+            .style("text-anchor", "end")
+            .style("font-weight", "bold")
+            .text(x_title);
 
       var yAxisGroup = svg.append("g")
             .call(yAxis)
             .attr("class", "axis")
             .attr("transform", "translate(" + [margin.left,0] + ")");
+
       yAxisGroup.append("text")
-                .attr("class", "label")
-                .attr("y", 10)
-                .attr("x",-margin.top)
-                .attr("transform", "rotate(-90)")
-                .style("text-anchor", "end")
-                .style("font-weight", "bold")
-                .text(y_title);
+            .attr('id', 'yAxisLabel')
+            .attr("class", "label")
+            .attr("y", 10)
+            .attr("x",-margin.top)
+            .attr("transform", "rotate(-90)")
+            .style("text-anchor", "end")
+            .style("font-weight", "bold")
+            .text(y_title);
 
       var circles = svg.selectAll("circle")
           .data(dataset)
@@ -239,7 +243,7 @@
 
       function setup(){
 
-        d3.selectAll("line").remove();
+          d3.selectAll("line").remove();
 
           d3.csv("https://raw.githubusercontent.com/ral1331/dataviz/master/econCensus_summary.csv", function (data) {
               dataset = data.map(function (d) {
@@ -255,24 +259,17 @@
 
               //svg.selectAll("text").remove();
 
+
+              x_title = "Employees";
+              y_title = "Revenue";
+
               xAxisGroup.transition().call(xAxis);
-              /*xAxisGroup.append("text")
-                .attr("class", "label")
-                .attr("x", width-margin.right)
-                .attr("y", -6)
-                .style("text-anchor", "end")
-                .style("font-weight", "bold")
-                .text(x_title);*/
+              d3.select("#xAxisLabel")
+                .text(x_title);
 
               yAxisGroup.transition().call(yAxis);
-              /*yAxisGroup.append("text")
-                .attr("class", "label")
-                .attr("y", 10)
-                .attr("x",-margin.top)
-                .attr("transform", "rotate(-90)")
-                .style("text-anchor", "end")
-                .style("font-weight", "bold")
-                .text(y_title);*/
+              d3.select("#yAxisLabel")
+                .text(y_title);
 
               var c = svg.selectAll("circle")
                 .data(dataset);
@@ -364,26 +361,13 @@
           //svg.selectAll("text").remove();
 
           xAxisGroup.transition().duration(500).call(xAxis);
-          /*xAxisGroup.append("text")
-            .attr("class", "label")
-            .attr("x", width-margin.right)
-            .attr("y", -6)
-            .style("text-anchor", "end")
-            .style("font-weight", "bold")
-            .text(x_title);*/
+          d3.select("#xAxisLabel")
+                .text(x_title);
 
           yAxisGroup.transition().duration(500).call(yAxis);
-          /*yAxisGroup.append("text")
-            .attr("class", "label")
-            .attr("y", 10)
-            .attr("x",-margin.top)
-            .attr("transform", "rotate(-90)")
-            .style("text-anchor", "end")
-            .style("font-weight", "bold")
-            .text(y_title);*/
+          d3.select("#yAxisLabel")
+                .text(y_title);
 
-          x_title = "# Employees";
-          y_title = "Revenue ($)";
 
           var c = svg.selectAll("circle")  
             .data(dataset);
@@ -423,8 +407,8 @@
                             id: dataset[i].id};
           }
 
-          // x_title = "log(# Employees)";
-          // y_title = "log(Revenue)";
+          x_title = "log("+x_title+")";
+          y_title = "log("+y_title+")";
 
           transDesc = "<strong>Logarithm Transformation</strong> is a mathematical transformation primarily used for reducing skew in data. When dealing with positively (left) skewed data it can be applied to the dependent and/or independent variable(s).";
 
@@ -441,8 +425,8 @@
                             id: dataset[i].id};
           }
 
-          /*x_title = "e^(# Employees)";
-          y_title = "e^(Revenue)";*/
+          x_title = "e^("+x_title+")";
+          y_title = "e^("+y_title+")";
       }
 
       function invTrans() {
@@ -456,8 +440,8 @@
                             id: dataset[i].id};
           }
 
-          /*x_title = "e^(# Employees)";
-          y_title = "e^(Revenue)";*/
+          x_title = x_title+"^-1";
+          y_title = y_title+"^-1";
       }
 
       function medianTrans() {
@@ -604,10 +588,13 @@
 
 // Create Event Handlers for mouse
       function handleMouseOver(d) {    
-          d3.select(this).attr({
+          d3.select(this)
+          .transition()
+          .duration(200)
+          .attr({
               fill: "#FF9B02",
               r: radius * 2
-            });
+          });
 
           div.transition()    
               .duration(50)    
@@ -621,14 +608,16 @@
       }
 
       function handleMouseOut(d) {   
-        d3.select(this).attr({
-              fill: "none",
-              r: radius
-            });
+          d3.select(this)
+          .transition()
+          .attr({
+                fill: "none",
+                r: radius
+          });
 
-        div.transition()    
-        .duration(2000)    
-        .style("opacity", 0)
+          div.transition()    
+          .duration(2000)    
+          .style("opacity", 0)
       }
     
       /*function autoScale(n) {
