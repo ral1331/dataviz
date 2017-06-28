@@ -14,9 +14,10 @@
       
       div.tooltip { 
           position: absolute;     
-          text-align: center;     
-          width: 150px;          
-          height: 40px;         
+          text-align: center;
+          vertical-align: center; 
+          width: 120px;          
+          height: 25px;         
           padding: 2px;       
           font: 12px sans-serif;    
           background: lightsteelblue; 
@@ -250,7 +251,8 @@
                   return {
                       x: parseInt(d.EMP),
                       y: parseInt(d.RCPTOT),
-                      id: d.NAICS_id2
+                      id: d.NAICS_id2,
+                      state: d.GEO_display_label
                   };
               });
 
@@ -404,13 +406,14 @@
               
               dataset[i] = {x: logx,
                             y: logy,
-                            id: dataset[i].id};
+                            id: dataset[i].id,
+                            state: dataset[i].state};
           }
 
           x_title = "log("+x_title+")";
           y_title = "log("+y_title+")";
 
-          transDesc = "<strong>Logarithm Transformation</strong> is a mathematical transformation primarily used for reducing skew in data. When dealing with positively (left) skewed data it can be applied to the dependent and/or independent variable(s).";
+          transDesc = "<strong>Logarithm Transformation</strong> is a mathematical transformation, in the same family as the power() transformation. It is primarily used for reducing positive (left) skew in data. When working with the log transformation, it is important to reinterpret the results as a 1% increase in X is correlated with a % increase in Y.";
 
       }
 
@@ -422,11 +425,15 @@
               
               dataset[i] = {x: expx,
                             y: expy,
-                            id: dataset[i].id};
+                            id: dataset[i].id,
+                            state: dataset[i].state};
           }
 
           x_title = "e^("+x_title+")";
           y_title = "e^("+y_title+")";
+
+          transDesc = "<strong>Exponential Transformation</strong> is the inverse of the log() transformation, therefore raising e to the power 'variable.' It can be used to normalize negative (right) skewed data similarly to the logarithmic transformation.";
+
       }
 
       function invTrans() {
@@ -437,11 +444,15 @@
               
               dataset[i] = {x: invx,
                             y: invy,
-                            id: dataset[i].id};
+                            id: dataset[i].id,
+                            state: dataset[i].state};
           }
 
           x_title = x_title+"^-1";
           y_title = y_title+"^-1";
+
+          transDesc = "<strong>Inverse Transformation</strong> is another mathematical transformation that descends from the power() transformation. Like the log transformation, it can be used for reducing postive skew in data.";
+
       }
 
       function medianTrans() {
@@ -598,10 +609,21 @@
 
           div.transition()    
               .duration(50)    
-              .style("opacity", .9);    
-          div.html("Industry: " + d.id + "<br/>Employees:: "  + Math.round(d.x) + "<br/>Revenue: " + Math.round(d.y))  
+              .style("opacity", .9);
+
+          if(d.state === undefined){
+          div.html(
+            "Industry: " + d.id)
               .style("left", (d3.event.pageX) + "px")   
               .style("top", (d3.event.pageY - 28) + "px");
+          }
+          else{
+            div.html(
+            "Industry: " + d.id +
+            "<br/>State: " + d.state)
+              .style("left", (d3.event.pageX) + "px")   
+              .style("top", (d3.event.pageY - 28) + "px");
+          }
 
 
 
