@@ -16,7 +16,7 @@
           position: absolute;     
           text-align: center;
           vertical-align: center; 
-          width: 120px;          
+          width: 160px;          
           height: 25px;         
           padding: 2px;       
           font: 12px sans-serif;    
@@ -246,12 +246,12 @@
 
           d3.selectAll("line").remove();
 
-          d3.csv("https://raw.githubusercontent.com/ral1331/dataviz/master/econCensus_summary.csv", function (data) {
+          d3.csv("https://raw.githubusercontent.com/ral1331/dataviz/master/econCensus_2012.csv", function (data) {
               dataset = data.map(function (d) {
                   return {
                       x: parseInt(d.EMP),
                       y: parseInt(d.RCPTOT),
-                      id: d.NAICS_id2,
+                      id: d.NAICS_display_lablel2,
                       state: d.GEO_display_label
                   };
               });
