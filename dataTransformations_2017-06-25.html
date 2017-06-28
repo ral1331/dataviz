@@ -15,7 +15,7 @@
       div.tooltip { 
           position: absolute;     
           text-align: center;
-          vertical-align: center; 
+          vertical-align: middle; 
           width: 160px;          
           height: 25px;         
           padding: 2px;       
@@ -112,7 +112,7 @@
 
 <div class="control-group">
     <button onclick="setup()">
-        Setup/Restart
+        Reset
     </button>
 
     <button onclick="update(9)">
@@ -190,7 +190,6 @@
       var circleAttrs = {
           cx: function(d) { return xScale(d.x); },
           cy: function(d) { return yScale(d.y); },
-          r: radius,
           stroke: "#01579b",
           "stroke-width": 1.5,
           fill: "none"
@@ -210,6 +209,13 @@
             .style("text-anchor", "end")
             .style("font-weight", "bold")
             .text(x_title);
+
+      xAxisGroup.append("text")
+            .attr("fill", "#616161")
+            .attr("x", margin.left)
+            .attr("y", 35)
+            .style("text-anchor", "start")
+            .text("source: 2012 US Economic Census")
 
       var yAxisGroup = svg.append("g")
             .call(yAxis)
@@ -242,16 +248,19 @@
           .attr("class", "Description")
           .style("opacity", 0);
 
+      setup();
+
       function setup(){
 
           d3.selectAll("line").remove();
+          radius = 4;
 
           d3.csv("https://raw.githubusercontent.com/ral1331/dataviz/master/econCensus_2012.csv", function (data) {
               dataset = data.map(function (d) {
                   return {
                       x: parseInt(d.EMP),
                       y: parseInt(d.RCPTOT),
-                      id: d.NAICS_display_lablel2,
+                      id: d.NAICS_display_label2,
                       state: d.GEO_display_label
                   };
               });
@@ -276,18 +285,22 @@
               var c = svg.selectAll("circle")
                 .data(dataset);
 
-              c.transition()
-                .attr(circleAttrs);
 
               c.enter()
                 .append("circle")
                 .attr(circleAttrs)
+                .attr({
+                    r: radius,
+                    fill: "none"})
                 .on("mouseover", handleMouseOver)
                 .on("mouseout", handleMouseOut);
 
               c.transition()
                   .duration(1000)  // Set how long it takes
-                  .attr(circleAttrs);
+                  .attr(circleAttrs)
+                  .attr({
+                    r: radius,
+                    fill: "none"});
 
               div2.transition()
                 .duration(500)
@@ -321,8 +334,6 @@
           }
 
           else if(trans==9){
-              transDesc = "";
-
               var reg = regTrans(dataset, "x", "y", d3.min(dataset, function(d){ return d.x}), d3.min(dataset, function(d){ return d.x}));
 
 
@@ -374,18 +385,21 @@
           var c = svg.selectAll("circle")  
             .data(dataset);
 
-          c.transition()
-            .attr(circleAttrs);
-
           c.enter()
             .append("circle")
             .attr(circleAttrs)
-            .on("mouseover", handleMouseOver)
+            .attr({
+              r: radius,
+              fill: "none"})
+              .on("mouseover", handleMouseOver)
             .on("mouseout", handleMouseOut);
 
           c.transition()
               .duration(1000) 
-              .attr(circleAttrs);
+              .attr(circleAttrs)
+              .attr({
+              r: radius,
+              fill: "none"});
 
           c.exit().remove();
 
@@ -465,6 +479,8 @@
             }; })
             .entries(dataset);
 
+          radius = 7;
+
           dataset = medianSummary.map(function(d) {
             return {
               id: d.key,
@@ -486,6 +502,8 @@
             }; })
             .entries(dataset);
 
+          radius = 7;
+
           dataset = meanSummary.map(function(d) {
             return {
               id: d.key,
@@ -506,6 +524,8 @@
               y: mode(dataset.map(function(d) {return d.y;}))
             }; })
             .entries(dataset);
+
+          radius = 7;
 
           dataset = modeSummary.map(function(d) {
             return {
